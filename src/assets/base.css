@@ -61,7 +61,7 @@
 body {
   min-height: 100vh;
   color: var(--color-text);
-  background: linear-gradient(to bottom, skyblue, white);
+  background: linear-gradient(to bottom, skyblue, white, white, white);
   transition:
     color 0.5s,
     background-color 0.5s;
@@ -83,4 +83,8 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+i {
+  color: black;
 }
