@@ -1,19 +1,54 @@
 <script setup>
 import axios from 'axios'
-import { ref, watchEffect } from 'vue'
+// import { ref, watchEffect } from 'vue'
+import { reactive, watchEffect } from "vue"
 
-const count = ref(1)
-watchEffect(() => 
-  axios
-    .get(`https://jsonplaceholder.typicode.com/posts/${count.value}`)
+const state = reactive({
+ count: 1,
+ name: 'Leo'
+})
+
+watchEffect(() => {
+ // Runs immediately
+ // Logs "Count: 0, Name: Leo"
+ axios
+    .get(`https://jsonplaceholder.typicode.com/posts/${state.count}`)
     .then((response) => {
       console.log(response.data.title)
     })
-)
+  console.log(state.name) 
+})
 </script>
 
 <template>
-  <button @click="count++">{{ count }}</button>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <button :style="{ 'visibility': state.name === 'home' ? 'visible' : 'hidden'}" type="button" class="btn btn-primary" @click="state.count++">
+    <i class="bi bi-shop"></i>
+  </button>
+  <button @click="state.count++">{{ state.count }}</button>
+  <nav class="navbar fixed-bottom bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#" @click="state.name = 'home'">
+      <i class="bi bi-house-fill"></i>
+    </a>
+    <a class="navbar-brand" href="#" @click="state.name = 'order'">
+      <i class="bi bi-cart-check-fill"></i>
+    </a>
+    <a class="navbar-brand" href="#" @click="state.name = 'analitics'">
+      <i class="bi bi-graph-up-arrow"></i>
+    </a>
+    <a class="navbar-brand" href="#" @click="state.name = 'inventory'">
+      <i class="bi bi-box-seam-fill"></i>
+    </a>
+    <a class="navbar-brand" href="#" @click="state.name = 'chat'">
+      <i class="bi bi-chat-dots-fill"></i>
+    </a>
+    <a class="navbar-brand" href="#" @click="state.name = 'profile'">
+      <i class="bi bi-person-lines-fill"></i>
+    </a>
+  </div>
+</nav>
 </template>
 <!-- <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
