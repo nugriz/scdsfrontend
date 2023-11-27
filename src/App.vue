@@ -5,8 +5,12 @@ import { reactive, watchEffect } from "vue"
 
 const state = reactive({
  count: 1,
- name: 'Leo',
- loginRes: {}
+ onLogin: true,
+ loginerror: false,
+ loading: false,
+ onSignup: false,
+ authorizd: false,
+ token: ''
 })
 
 const shadow = ("box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;"
@@ -21,52 +25,43 @@ watchEffect(() => {
     })
   console.log(state.name) 
 })
-function login(){
+function sign(){
+  state.loading = true
   const email = document.getElementById("exampleInputEmail1").value
   const password = document.getElementById("exampleInputPassword1").value
+  const username = document.getElementById("exampleInputUsername1").value
+  const url = state.onLogin ? 'https://ngestok-8ff9388ae0c0.herokuapp.com/users/auth' : 'https://ngestok-8ff9388ae0c0.herokuapp.com/users/'
   const data = {
     email: email,
     password: password,
-    username: password
+    username: username,
   }
-  console.log(data)
+  // console.log(data)
   axios
-    .post('https://ngestok-8ff9388ae0c0.herokuapp.com/users/auth', JSON.stringify(data), {
+    .post(url, JSON.stringify(data), {
         headers: {
           'Content-Type': 'application/json',
         }
-      })
+      }
+    )
     .then((response) => {
-      console.log(response)
-    })
+      state.loading = false
+      // console.log(response.data)
+      state.authorizd = true
+      state.token = response.data.token
+      // console.log(state.token)
+    }, (err) => {
+      state.loading = false
+      console.log(err)
+      state.loginerror = true
+    }
+  )
 }
-// const login = async () => {
-//   const email = document.getElementById("exampleInputEmail1").value
-//   const password = document.getElementById("exampleInputPassword1").value
-//   console.log(email, password)
-//   try{
-//     const response = await axios
-//       .post('https://ngestok-8ff9388ae0c0.herokuapp.com/users/auth', {
-//         email: "test",
-//         password: "test"
-//       }, {
-//         headers: {
-//           'Content-Type': 'application/json',
-//         }
-//       })
-//       console.log(response)
-//   } catch (err){
-//     console.log(err.response)
-//   }
-  // console.log(response)
-  // .then((response) => {
-  //   console.log(response)
-  // })
 
-  // , (error) => {
-  //   console.log(error);
-  // });
-// }
+function moveToSignup(){
+  state.onSignup = true
+  state.onLogin = false
+}
 </script>
 
 <template>
@@ -76,10 +71,15 @@ function login(){
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   
   <!-- BODY -->
+
+  <!-- LOADING-->
+  <div :style="{ 'visibility': state.loading ? 'visible' : 'hidden'}" style="position: fixed; z-index: 1; left: 0; top: 0; width: 100vw; height: 100vh; text-align: center; padding-top: 40vh;">
+    <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+  </div>
   
-  <!-- LOGIN -->
-  <div class="card text-bg-light mx-auto" style="box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px; border-radius: 20px;" :style="{ 'visibility': state.name === 'home' ? 'visible' : 'hidden'}">
-    <div class="card-header"><h1>Log in</h1></div>
+  <!-- LOGIN & SIGNUP-->
+  <div class="card text-bg-light mx-auto" style="box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px; border-radius: 20px;" :style="{ 'display': state.authorizd ? 'none': ''}">
+    <div class="card-header"><h1 style="margin: auto;">{{ state.onLogin ? "Login" : "Signup" }}</h1></div>
     <div class="card-body" style="padding-bottom: 0;">
       <div class="mb-3">
         <label for="exampleInputUsername1" class="form-label"><h6>Username</h6></label>
@@ -94,41 +94,29 @@ function login(){
         <label for="exampleInputPassword1" class="form-label"><h6>Password</h6></label>
         <input type="password" class="form-control" id="exampleInputPassword1">
       </div>
-      <button type="submit" class="w-100 btn" :style=shadow style="border-radius: 20px;" @click="login()"><h5>Log in</h5></button>
+      <button type="submit" class="w-100 btn" :style=shadow style="border-radius: 20px;" @click="sign()"><h5 style="margin: auto;">{{ state.onLogin ? "Log in" : "Sign up" }}</h5></button>
       <div class="mb-3">
         <hr>
-        <div id="emailHelp" class="form-text">Does not have account? create right now</div>
-        <button type="submit" class="w-100 btn mt-3" :style=shadow style="border-radius: 20px;" @click="login()"><h5>Sign up</h5></button>
+        <div :style="{ 'visibility': state.loginerror ? 'visible' : 'hidden'}" style="color: red;">The data entered is incorrect</div>
+        <div id="emailHelp" class="form-text">{{ state.onLogin ? "Does not have account? create right now" : "Already have account? Login now"}}</div>
+        <button @click="moveToSignup()" class="w-100 btn mt-3" :style=shadow style="border-radius: 20px;"><h5 style="margin: auto;">{{ state.onLogin ? "Sign up" : "Log in"}}</h5></button>
       </div>
     </div>
   </div>
 
-  <!-- SIGNUP -->
-
-  <div class="card text-bg-light mx-auto" style="box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px; border-radius: 20px;" :style="{ 'visibility': state.name === 'home' ? 'visible' : 'hidden'}">
-    <div class="card-header"><h1>Sign Up</h1></div>
-    <div class="card-body" style="padding-bottom: 0;">
-      <div class="mb-3">
-        <label for="exampleInputUsername1" class="form-label"><h6>Username</h6></label>
-        <input type="username" class="form-control" id="exampleInputUsername1">
-      </div>
-      <div class="mb-3">
-        <label for="exampleInputEmail1" class="form-label"><h6>Email address</h6></label>
-        <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-        <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
-      </div>
-      <div class="mb-3">
-        <label for="exampleInputPassword1" class="form-label"><h6>Password</h6></label>
-        <input type="password" class="form-control" id="exampleInputPassword1">
-      </div>
-      <button type="submit" class="w-100 btn" :style=shadow style="border-radius: 20px;" @click="login()"><h5>Log in</h5></button>
-      <div class="mb-3">
-        <hr>
-        <div id="emailHelp" class="form-text">Already have account? log in right now</div>
-        <button type="submit" class="w-100 btn mt-3" :style=shadow style="border-radius: 20px;" @click="login()"><h5>Sign up</h5></button>
+  <!-- HOME -->
+  <div class="row row-cols-2 row-cols-md-2 g-4" :style="{ 'display': state.authorizd ? '' : 'none'}">
+  <div class="col" style="padding: 5px; margin-top: 0;" v-for="n in 14" :key="n">
+    <div class="card btn btn-light" style="border-radius: 5%; padding: 0;">
+      <img src="https://placehold.jp/150x150.png" class="card-img-top" alt="..." style="border-top-left-radius: 5%; border-top-right-radius: 5%;">
+      <div class="card-body" style="padding: 10%; padding-bottom: 0; text-align: left;">
+        <h6 class="card-title">Emina Bright Stuff</h6>
+        <b class="card-text">Rp22.000</b>
+        <p>Emina Official Store</p>
       </div>
     </div>
   </div>
+</div>
 
   <!-- <button :style="{ 'visibility': state.name === 'home' ? 'visible' : 'hidden'}" type="button" class="btn btn-primary" @click="state.count++">
     <i class="bi bi-shop"></i>
