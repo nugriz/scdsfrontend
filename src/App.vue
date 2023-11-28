@@ -10,21 +10,54 @@ const state = reactive({
  loading: false,
  onSignup: false,
  authorizd: false,
- token: ''
+ token: '',
+ products: [],
+ supplier: []
 })
 
 const shadow = ("box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;"
 )
-watchEffect(() => {
- // Runs immediately
- // Logs "Count: 0, Name: Leo"
- axios
-    .get(`https://jsonplaceholder.typicode.com/posts/${state.count}`)
+// watchEffect(() => {
+//  // Runs immediately
+//  // Logs "Count: 0, Name: Leo"
+//  axios
+//     .get(`https://jsonplaceholder.typicode.com/posts/${state.count}`)
+//     .then((response) => {
+//       console.log(response.data.title)
+//     })
+//   console.log(state.name) 
+// })
+
+function home(){
+  const url = 'https://ngestok-8ff9388ae0c0.herokuapp.com/products'
+  const tokens = 'Bearer ' + state.token
+  const config = {
+          'authorization': tokens,
+          'content-type': 'application/json',
+        }
+  axios
+    .get(url, {
+        headers: config
+      }
+    )
     .then((response) => {
-      console.log(response.data.title)
-    })
-  console.log(state.name) 
-})
+      state.loading = false
+      console.log(response.data)
+      state.authorizd = true
+      state.products = response.data
+      for (let index = 0; index < response.data.length; index++) {
+        getSupplier(response.data[index].supplier_id)
+      }
+      // console.log(state.token)
+    }, (err) => {
+      console.log(config)
+      state.loading = false
+      console.log(err)
+      state.loginerror = true
+    }
+  )
+}
+
 function sign(){
   state.loading = true
   const email = document.getElementById("exampleInputEmail1").value
@@ -49,6 +82,7 @@ function sign(){
       // console.log(response.data)
       state.authorizd = true
       state.token = response.data.token
+      home()
       // console.log(state.token)
     }, (err) => {
       state.loading = false
@@ -61,6 +95,28 @@ function sign(){
 function moveToSignup(){
   state.onSignup = true
   state.onLogin = false
+}
+
+function backToLogin(){
+  state.onSignup = false
+  state.onLogin = true
+}
+
+const getSupplier = (id) => {
+  const url = 'https://ngestok-8ff9388ae0c0.herokuapp.com/users/' + id 
+  axios
+    .get(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        }
+      }
+    ).then((response) =>  {
+        console.log(url)
+        state.supplier.unshift(response.data.username)
+        console.log(response)
+      }
+    )
 }
 </script>
 
@@ -94,28 +150,37 @@ function moveToSignup(){
         <label for="exampleInputPassword1" class="form-label"><h6>Password</h6></label>
         <input type="password" class="form-control" id="exampleInputPassword1">
       </div>
-      <button type="submit" class="w-100 btn" :style=shadow style="border-radius: 20px;" @click="sign()"><h5 style="margin: auto;">{{ state.onLogin ? "Log in" : "Sign up" }}</h5></button>
+      <button type="submit" class="w-100 btn" style="border-radius: 20px; border-color: skyblue;" @click="sign()"><h5 style="margin: auto;">{{ state.onLogin ? "Log in" : "Sign up" }}</h5></button>
       <div class="mb-3">
         <hr>
         <div :style="{ 'visibility': state.loginerror ? 'visible' : 'hidden'}" style="color: red;">The data entered is incorrect</div>
         <div id="emailHelp" class="form-text">{{ state.onLogin ? "Does not have account? create right now" : "Already have account? Login now"}}</div>
-        <button @click="moveToSignup()" class="w-100 btn mt-3" :style=shadow style="border-radius: 20px;"><h5 style="margin: auto;">{{ state.onLogin ? "Sign up" : "Log in"}}</h5></button>
+        <button @click="moveToSignup()" class="w-100 btn mt-3" :style="{ 'display': state.onSignup ? 'none': ''}" style="border-radius: 20px; border-color: skyblue;"><h5 style="margin: auto;">Sign up</h5></button>
+        <button @click="backToLogin()" class="w-100 btn mt-3" :style="{ 'display': state.onLogin ? 'none': ''}" style="border-radius: 20px; border-color: skyblue;"><h5 style="margin: auto;">Log in</h5></button>
       </div>
     </div>
   </div>
 
   <!-- HOME -->
+  <div :style="{ 'display': state.authorizd ? '' : 'none'}" style="position: fixed; background-color: skyblue; left: 0; top: 0; z-index: 1;width: 100vw; height: 9vh; border-color: black; color: white; text-align: left; padding: 0.5vh; padding-left: 5%;">
+    <i class="bi bi-bag-heart-fill" style="color: white;font-size: 2em;display: inline-block;"> </i>
+    <div style="width: 2vw; display: inline-block;"></div>
+    <h1 style="display: inline-block;">Supplify.id</h1>
+  </div>
+  <div style="height: 9vh;"></div>
+
   <div class="row row-cols-2 row-cols-md-2 g-4" :style="{ 'display': state.authorizd ? '' : 'none'}">
-  <div class="col" style="padding: 5px; margin-top: 0;" v-for="n in 14" :key="n">
+  <div class="col" style="padding: 5px; margin-top: 0;" v-for="product in state.products" :key="product">
     <div class="card btn btn-light" style="border-radius: 5%; padding: 0;">
       <img src="https://placehold.jp/150x150.png" class="card-img-top" alt="..." style="border-top-left-radius: 5%; border-top-right-radius: 5%;">
       <div class="card-body" style="padding: 10%; padding-bottom: 0; text-align: left;">
-        <h6 class="card-title">Emina Bright Stuff</h6>
-        <b class="card-text">Rp22.000</b>
-        <p>Emina Official Store</p>
+        <h6 class="card-title">{{ product.name }}</h6>
+        <b class="card-text">{{ product.price }}</b>
+        <p>{{ state.supplier[-1] ? state.supplier.pop() : "Johnny & Johnson (J&J) "}}</p>
       </div>
     </div>
   </div>
+  <div style="height: 1vh;"></div>
 </div>
 
   <!-- <button :style="{ 'visibility': state.name === 'home' ? 'visible' : 'hidden'}" type="button" class="btn btn-primary" @click="state.count++">
