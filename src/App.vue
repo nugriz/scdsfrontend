@@ -4,6 +4,7 @@ import axios from 'axios'
 import { reactive, watchEffect } from "vue"
 
 const state = reactive({
+ page: 'home',
  count: 1,
  onLogin: true,
  loginerror: false,
@@ -25,10 +26,11 @@ const shadow = ("box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.
 //     .then((response) => {
 //       console.log(response.data.title)
 //     })
-//   console.log(state.name) 
+//   console.log(state.page) 
 // })
 
 function home(){
+  state.loading = true
   const url = 'https://ngestok-8ff9388ae0c0.herokuapp.com/products'
   const tokens = 'Bearer ' + state.token
   const config = {
@@ -46,10 +48,12 @@ function home(){
       state.authorizd = true
       state.products = response.data
       for (let index = 0; index < response.data.length; index++) {
+        state.loading = false
         getSupplier(response.data[index].supplier_id)
       }
       // console.log(state.token)
     }, (err) => {
+      state.loading = false
       console.log(config)
       state.loading = false
       console.log(err)
@@ -79,10 +83,15 @@ function sign(){
     )
     .then((response) => {
       state.loading = false
-      // console.log(response.data)
-      state.authorizd = true
-      state.token = response.data.token
-      home()
+      console.log(state.onLogin)
+      console.log(response.data)
+      if (state.onLogin) {
+        state.authorizd = true
+        state.token = response.data.token
+        home()
+      } else {
+        state.onLogin = true
+      }
       // console.log(state.token)
     }, (err) => {
       state.loading = false
@@ -103,6 +112,7 @@ function backToLogin(){
 }
 
 const getSupplier = (id) => {
+  state.loading = true
   const url = 'https://ngestok-8ff9388ae0c0.herokuapp.com/users/' + id 
   axios
     .get(url, {
@@ -112,6 +122,7 @@ const getSupplier = (id) => {
         }
       }
     ).then((response) =>  {
+        state.loading = false
         console.log(url)
         state.supplier.unshift(response.data.username)
         console.log(response)
@@ -152,11 +163,10 @@ const getSupplier = (id) => {
       </div>
       <button type="submit" class="w-100 btn" style="border-radius: 20px; border-color: skyblue;" @click="sign()"><h5 style="margin: auto;">{{ state.onLogin ? "Log in" : "Sign up" }}</h5></button>
       <div class="mb-3">
-        <hr>
+        <hr :style="{ 'display': state.onSignup ? 'none': ''}">
         <div :style="{ 'visibility': state.loginerror ? 'visible' : 'hidden'}" style="color: red;">The data entered is incorrect</div>
-        <div id="emailHelp" class="form-text">{{ state.onLogin ? "Does not have account? create right now" : "Already have account? Login now"}}</div>
+        <div id="emailHelp" class="form-text" :style="{ 'display': state.onSignup ? 'none': ''}">{{ state.onLogin ? "Does not have account? create right now" : "Already have account? Login now"}}</div>
         <button @click="moveToSignup()" class="w-100 btn mt-3" :style="{ 'display': state.onSignup ? 'none': ''}" style="border-radius: 20px; border-color: skyblue;"><h5 style="margin: auto;">Sign up</h5></button>
-        <button @click="backToLogin()" class="w-100 btn mt-3" :style="{ 'display': state.onLogin ? 'none': ''}" style="border-radius: 20px; border-color: skyblue;"><h5 style="margin: auto;">Log in</h5></button>
       </div>
     </div>
   </div>
@@ -169,10 +179,10 @@ const getSupplier = (id) => {
   </div>
   <div style="height: 9vh;"></div>
 
-  <div class="row row-cols-2 row-cols-md-2 g-4" :style="{ 'display': state.authorizd ? '' : 'none'}">
+  <div class="row row-cols-2 row-cols-md-2 g-4" :style="{ 'display': state.authorizd ? (state.page === 'home' ? '' : 'none') : 'none'}">
   <div class="col" style="padding: 5px; margin-top: 0;" v-for="product in state.products" :key="product">
-    <div class="card btn btn-light" style="border-radius: 5%; padding: 0;">
-      <img src="https://placehold.jp/150x150.png" class="card-img-top" alt="..." style="border-top-left-radius: 5%; border-top-right-radius: 5%;">
+    <div class="card btn btn-light" style="border-radius: 0.5em; padding: 0; border-color: white;">
+      <img src="https://placehold.jp/150x150.png" class="card-img-top" alt="..." style="border-top-left-radius: 0.5em; border-top-right-radius: 0.5em;">
       <div class="card-body" style="padding: 10%; padding-bottom: 0; text-align: left;">
         <h6 class="card-title">{{ product.name }}</h6>
         <b class="card-text">{{ product.price }}</b>
@@ -183,28 +193,42 @@ const getSupplier = (id) => {
   <div style="height: 1vh;"></div>
 </div>
 
-  <!-- <button :style="{ 'visibility': state.name === 'home' ? 'visible' : 'hidden'}" type="button" class="btn btn-primary" @click="state.count++">
-    <i class="bi bi-shop"></i>
-  </button>
-  <button @click="state.count++">{{ state.count }}</button> -->
-  <nav class="navbar fixed-bottom bg-body-tertiary" style="box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;">
+<!-- ORDERS-->
+<div :style="{ 'display': state.page === 'order' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Belum ada pesanan</h1></div>
+
+<!-- ANALITICS-->
+<div :style="{ 'display': state.page === 'analitics' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Fitur ini belum tersedia</h1></div>
+
+<!-- INVENTORI -->
+<div :style="{ 'display': state.page === 'inventory' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Belum ada inventori</h1></div>
+
+<!-- CHAT -->
+<div :style="{ 'display': state.page === 'chat' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Belum ada percakapan</h1></div>
+
+<!-- PROFIL -->
+<div :style="{ 'display': state.page === 'profile' ? '' : 'none'}">
+<i class="bi bi-person-circle" style="color: white;font-size: 4em;display: inline-block;" ></i>
+</div>
+
+<!-- BOTTOM NAVIGATION BAR-->
+<nav class="navbar fixed-bottom bg-body-tertiary" style="box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;">
   <div class="container-fluid" style="max-width: 90vw;">
-    <a class="navbar" href="#" @click="state.name = 'home'">
+    <a class="navbar" href="#" @click="state.page = 'home'">
       <i class="bi bi-house-fill"></i>
     </a>
-    <a class="navbar" href="#" @click="state.name = 'order'">
+    <a class="navbar" href="#" @click="state.page = 'order'">
       <i class="bi bi-cart-check-fill"></i>
     </a>
-    <a class="navbar" href="#" @click="state.name = 'analitics'">
+    <a class="navbar" href="#" @click="state.page = 'analitics'">
       <i class="bi bi-graph-up-arrow"></i>
     </a>
-    <a class="navbar" href="#" @click="state.name = 'inventory'">
+    <a class="navbar" href="#" @click="state.page = 'inventory'">
       <i class="bi bi-box-seam-fill"></i>
     </a>
-    <a class="navbar" href="#" @click="state.name = 'chat'">
+    <a class="navbar" href="#" @click="state.page = 'chat'">
       <i class="bi bi-chat-dots-fill"></i>
     </a>
-    <a class="navbar" href="#" @click="state.name = 'profile'">
+    <a class="navbar" href="#" @click="state.page = 'profile'">
       <i class="bi bi-person-lines-fill"></i>
     </a>
   </div>
