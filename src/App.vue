@@ -13,7 +13,10 @@ const state = reactive({
  authorizd: false,
  token: '',
  products: [],
- supplier: []
+ supplier: [],
+ namauser: '',
+ emailuser: '',
+ warehouses: false
 })
 
 const shadow = ("box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;"
@@ -88,6 +91,8 @@ function sign(){
       if (state.onLogin) {
         state.authorizd = true
         state.token = response.data.token
+        state.namauser = username
+        state.emailuser = email
         home()
       } else {
         state.onLogin = true
@@ -104,11 +109,6 @@ function sign(){
 function moveToSignup(){
   state.onSignup = true
   state.onLogin = false
-}
-
-function backToLogin(){
-  state.onSignup = false
-  state.onLogin = true
 }
 
 const getSupplier = (id) => {
@@ -200,14 +200,32 @@ const getSupplier = (id) => {
 <div :style="{ 'display': state.page === 'analitics' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Fitur ini belum tersedia</h1></div>
 
 <!-- INVENTORI -->
-<div :style="{ 'display': state.page === 'inventory' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Belum ada inventori</h1></div>
+<div :style="{ 'display': state.page === 'inventory' ? '' : 'none'}">
+  <button type="button" class="btn btn-primary btn-sm float-end" :style=shadow style="border-color: skyblue;background-color: skyblue;border-radius: 50px;"><h5 style="padding: 0.01%;">+ warehouse</h5></button>
+  <div style="text-align: center; padding-top: 20vh;">
+    <i v-if="!state.warehouses" class="bi bi-box2" style="color: skyblue; font-size: 1500%;"></i>
 
+    <div v-for="warehouse in state.warehouses" :key="warehouse" class="card text-bg-light mb-3 btn btn-light" style="max-width: 18rem; text-align: left;">
+      <div class="card-header">Header</div>
+      <div class="card-body">
+        <h5 class="card-title">Light card title</h5>
+        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- CHAT -->
 <div :style="{ 'display': state.page === 'chat' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Belum ada percakapan</h1></div>
 
 <!-- PROFIL -->
-<div :style="{ 'display': state.page === 'profile' ? '' : 'none'}">
-<i class="bi bi-person-circle" style="color: white;font-size: 4em;display: inline-block;" ></i>
+<div :style="{ 'display': state.authorizd ? (state.page === 'profile' ? '' : 'none') : 'none'}">
+<div style="background-color: skyblue; position: fixed; left: 0; top: 8vh; width: 100vw; padding: 2em;">
+  <i class="bi bi-person-circle" style="color: white;font-size: 4em;display: inline-block;" ></i>
+  <div style="width: 6vw; display: inline-block;"></div>
+  <h1 style="display: inline-block; font-size: 4em; color: white;">{{ state.namauser }}</h1>
+</div>
+<h3 style="position: fixed; left: 0; top: 27vh;padding: 1.5em;">email : {{ state.emailuser }}</h3>
+<hr style="position: fixed; left: 0; top: 37vh;">
 </div>
 
 <!-- BOTTOM NAVIGATION BAR-->
