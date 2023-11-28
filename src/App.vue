@@ -16,7 +16,8 @@ const state = reactive({
  supplier: [],
  namauser: '',
  emailuser: '',
- warehouses: false
+ warehouses: [1,2,3,4],
+ onCreateWarehouse: false
 })
 
 const shadow = ("box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;"
@@ -129,6 +130,15 @@ const getSupplier = (id) => {
       }
     )
 }
+
+function createWarehouse(){
+  state.onCreateWarehouse = true
+}
+
+function addWarehouse(){
+  state.onCreateWarehouse = false
+
+}
 </script>
 
 <template>
@@ -182,10 +192,10 @@ const getSupplier = (id) => {
   <div class="row row-cols-2 row-cols-md-2 g-4" :style="{ 'display': state.authorizd ? (state.page === 'home' ? '' : 'none') : 'none'}">
   <div class="col" style="padding: 5px; margin-top: 0;" v-for="product in state.products" :key="product">
     <div class="card btn btn-light" style="border-radius: 0.5em; padding: 0; border-color: white;">
-      <img src="https://placehold.jp/150x150.png" class="card-img-top" alt="..." style="border-top-left-radius: 0.5em; border-top-right-radius: 0.5em;">
+      <img src="https://dummyimage.com/640x640/fff/aaa" class="card-img-top" alt="..." style="border-top-left-radius: 0.5em; border-top-right-radius: 0.5em;">
       <div class="card-body" style="padding: 10%; padding-bottom: 0; text-align: left;">
         <h6 class="card-title">{{ product.name }}</h6>
-        <b class="card-text">{{ product.price }}</b>
+        <b class="card-text">Rp{{ product.price.toLocaleString() }}</b>
         <p>{{ state.supplier[-1] ? state.supplier.pop() : "Johnny & Johnson (J&J) "}}</p>
       </div>
     </div>
@@ -200,18 +210,47 @@ const getSupplier = (id) => {
 <div :style="{ 'display': state.page === 'analitics' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Fitur ini belum tersedia</h1></div>
 
 <!-- INVENTORI -->
-<div :style="{ 'display': state.page === 'inventory' ? '' : 'none'}">
-  <button type="button" class="btn btn-primary btn-sm float-end" :style=shadow style="border-color: skyblue;background-color: skyblue;border-radius: 50px;"><h5 style="padding: 0.01%;">+ warehouse</h5></button>
+<div :style="{ 'display': state.page === 'inventory' ? (state.onCreateWarehouse ? 'none' : '') : 'none'}">
+  <button type="button" class="btn btn-primary btn-sm float-end" :style=shadow @click="createWarehouse()" style="width: 40vw;border-color: #D27D2D;background-color: #D27D2D;border-radius: 50px;"><h5 style="padding: 0.01%;">+ warehouse</h5></button>
+  <button type="button" class="btn btn-primary btn-sm float-start" :style=shadow style="width: 40vw; border-color: indigo;background-color: indigo;border-radius: 50px;"><h5 style="padding: 0.01%;">+ produk mu   </h5></button>
+  
   <div style="text-align: center; padding-top: 20vh;">
     <i v-if="!state.warehouses" class="bi bi-box2" style="color: skyblue; font-size: 1500%;"></i>
 
-    <div v-for="warehouse in state.warehouses" :key="warehouse" class="card text-bg-light mb-3 btn btn-light" style="max-width: 18rem; text-align: left;">
-      <div class="card-header">Header</div>
-      <div class="card-body">
-        <h5 class="card-title">Light card title</h5>
-        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+    <div><h1>Produk Jualan Mu</h1><hr></div>
+    <div class="scrolling-wrapper">
+      <div v-for="warehouse in state.warehouses" :key="warehouse" class="kartu card text-bg-light mb-3 btn btn-light" style="padding: 0;width: 8rem; text-align: left;">
+        <img src="https://placehold.jp/150x150.png" class="card-img-top">
+        <div class="card-body" style="overflow: hidden;">
+          <h5 class="card-title">Light card title</h5>
+          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+        </div>
       </div>
     </div>
+    <div style=" position: relative">
+      <div style="height: 1vh;"></div>
+      <h1>Daftar Warehouse</h1>
+      <hr>
+      <div class="d-grid gap-2">
+        <button :style=shadow class="btn btn-light" type="button">Button</button>
+        <button :style=shadow class="btn btn-light" type="button">Button</button>
+        <button :style=shadow class="btn btn-light" type="button">Button</button>
+        <button :style=shadow class="btn btn-light" type="button">Button</button>
+      </div>
+      <div style="height: 10vh;"></div>
+    </div>
+  </div>
+</div>
+<!-- FORM CREATE WAREHOUSE-->
+<div class="card text-bg-light mx-auto" style="box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px; border-radius: 20px;" :style="{ 'display': state.onCreateWarehouse ? '': 'none'}">
+  <div class="card-header"><h1 style="margin: auto;">Add Warehouse</h1></div>
+  <div class="card-body" style="padding-bottom: 0;">
+    <div class="mb-3">
+      <label for="exampleInputLocation1" class="form-label"><h6>Location</h6></label>
+      <input type="username" class="form-control" id="exampleInputLocation1">
+    </div>
+    <button type="submit" class="w-100 btn" style="border-radius: 20px; border-color: skyblue;" @click="addWarehouse()"><h5 style="margin: auto;">Add</h5></button>
+    <div style="height: 2vh;"></div>
   </div>
 </div>
 <!-- CHAT -->

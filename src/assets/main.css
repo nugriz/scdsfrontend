@@ -27,6 +27,21 @@ a,
     place-items: center;
   }
 }
+
+.scrolling-wrapper {
+  overflow-x: scroll;
+  left:-9vw;
+  width: 100vw;
+  position: relative;
+  white-space: nowrap;
+
+  .kartu {
+    display: inline-block;
+    margin: 2%;
+    height: 30vh;
+  }
+}
+
 .lds-ellipsis {
   background-color: white;
   display: inline-block;
