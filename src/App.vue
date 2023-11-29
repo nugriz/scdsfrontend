@@ -12,16 +12,27 @@ const state = reactive({
  onSignup: false,
  authorizd: false,
  token: '',
+ orders: [],
  products: [],
+ product: {},
+ showprod: false,
  supplier: [],
  namauser: '',
  emailuser: '',
  warehouses: [1,2,3,4],
- onCreateWarehouse: false
+ onCreateWarehouse: false,
+ onCreateProduct: false,
+ iduser: '',
+ pc: false,
+ checkout: false,
+ messages: [],
+//  base: 'https://ngestok-8ff9388ae0c0.herokuapp.com'
+ base: 'http://localhost:3000'
 })
 
 const shadow = ("box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;"
 )
+
 // watchEffect(() => {
 //  // Runs immediately
 //  // Logs "Count: 0, Name: Leo"
@@ -35,7 +46,7 @@ const shadow = ("box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.
 
 function home(){
   state.loading = true
-  const url = 'https://ngestok-8ff9388ae0c0.herokuapp.com/products'
+  const url = state.base + '/products'
   const tokens = 'Bearer ' + state.token
   const config = {
           'authorization': tokens,
@@ -71,7 +82,7 @@ function sign(){
   const email = document.getElementById("exampleInputEmail1").value
   const password = document.getElementById("exampleInputPassword1").value
   const username = document.getElementById("exampleInputUsername1").value
-  const url = state.onLogin ? 'https://ngestok-8ff9388ae0c0.herokuapp.com/users/auth' : 'https://ngestok-8ff9388ae0c0.herokuapp.com/users/'
+  const url = state.onLogin ? state.base + '/users/auth' : state.base + '/users/'
   const data = {
     email: email,
     password: password,
@@ -94,7 +105,11 @@ function sign(){
         state.token = response.data.token
         state.namauser = username
         state.emailuser = email
+        getUserIdByEmail(email)
+        getWarehouses()
+        getorders()
         home()
+        getmessage()
       } else {
         state.onLogin = true
       }
@@ -114,7 +129,7 @@ function moveToSignup(){
 
 const getSupplier = (id) => {
   state.loading = true
-  const url = 'https://ngestok-8ff9388ae0c0.herokuapp.com/users/' + id 
+  const url = state.base + '/users/' + id 
   axios
     .get(url, {
         headers: {
@@ -131,14 +146,288 @@ const getSupplier = (id) => {
     )
 }
 
+function getUserIdByEmail(email){
+  state.loading = true
+  const url = state.base + '/users/e/' + email 
+  axios
+    .get(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        }
+      }
+    ).then((response) =>  {
+        state.loading = false
+        console.log(url)
+        console.log(response)
+        state.iduser = response.data[0].id
+      }
+    )
+}
+
 function createWarehouse(){
   state.onCreateWarehouse = true
 }
 
-function addWarehouse(){
-  state.onCreateWarehouse = false
-
+function createProduct(){
+  state.onCreateProduct = true
 }
+
+function addWarehouse(){
+  state.loading = true
+  const data = {
+    location: document.getElementById('exampleInputLocation1').value,
+    seller_id: state.iduser,
+  }
+  axios
+    .post(state.base + '/warehouses', data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token,
+        }
+      }
+    )
+    .then((response) => {
+      state.onCreateWarehouse = false
+      state.loading = false
+      console.log(response.data)
+      getWarehouses()
+    }, (err) => {
+      state.loading = false
+      console.log(err)
+      state.loginerror = true
+    }
+  )
+}
+
+function addProduct(){
+  state.loading = true
+  const data = {
+    name: document.getElementById('productname').value,
+    price: document.getElementById('productprice').value,
+    desc: document.getElementById('productdesc').value,
+    supplier_id: state.iduser,
+  }
+  axios
+    .post(state.base + '/products', data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token,
+        }
+      }
+    )
+    .then((response) => {
+      state.onCreateProduct = false
+      state.loading = false
+      console.log(response.data)
+      getProducts()
+    }, (err) => {
+      state.onCreateProduct = false
+      state.loading = false
+      console.log(err)
+      state.loginerror = true
+    }
+  )
+}
+
+function getWarehouses(){
+  state.loading = true
+  const url = state.base + '/warehouses/' 
+  axios
+    .get(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        }
+      }
+    ).then((response) =>  {
+        state.loading = false
+        console.log(url)
+        state.warehouses = response.data
+        console.log(response)
+      }, (err) => {
+      // state.onCreateProduct = false
+      state.loading = false
+      console.log(err)
+      state.loginerror = true
+    }
+  )
+}
+
+function getProducts(){
+  state.loading = true
+  const url = state.base + '/products/' 
+  axios
+    .get(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        }
+      }
+    ).then((response) =>  {
+        state.loading = false
+        console.log(url)
+        state.products = response.data
+        console.log(response)
+      }
+    )
+}
+
+function showProduct(product_id){
+  state.showprod = true
+  state.loading = true
+  const url = state.base + '/products/' + product_id 
+  axios
+    .get(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        }
+      }
+    ).then((response) =>  {
+        state.loading = false
+        state.showprod = true
+        console.log(url)
+        state.product = response.data
+        console.log(response)
+      }, (err) => {
+      // state.onCreateProduct = false
+      state.loading = false
+      console.log(err)
+      state.loginerror = true
+    }
+  )
+}
+
+function backtohome(){
+  state.showprod = false
+  state.count = 1
+  state.checkout = false
+}
+
+function backtoprod(){
+  state.count = 1
+  state.checkout = false
+}
+
+function addquantity(){
+  state.count++
+}
+
+function subquantity(){
+  if (state.count > 1) {
+    state.count--
+  }
+}
+
+function checkout(){
+  state.checkout = true
+}
+
+function getorders(){
+  state.loading = true
+  const url = state.base + '/orders/' 
+  axios
+    .get(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token
+        }
+      }
+    ).then((response) =>  {
+        state.loading = false
+        console.log(url)
+        state.orders = response.data
+        console.log(response)
+      }
+    )
+}
+
+function buatorder(){
+  state.loading = true
+  backtohome()
+  const data = {
+    product_id: state.product.id,
+    buyer_id: state.iduser,
+    quantity: state.count,
+    total: state.product.price * state.count,
+    address: document.getElementById('inputaddress').value
+  }
+  axios
+    .post(state.base + '/orders', data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token,
+        }
+      }
+    )
+    .then((response) => {
+      // state.onCreateProduct = false
+      state.loading = false
+      console.log(response.data)
+      getorders()
+    }, (err) => {
+      state.onCreateProduct = false
+      state.loading = false
+      console.log(err)
+      state.loginerror = true
+    }
+  )
+}
+
+function getmessage(){
+  axios
+    .get(state.base + '/chats', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token,
+        }
+      }
+    )
+    .then((response) => {
+      // state.onCreateProduct = false
+      state.loading = false
+      console.log(response.data)
+      state.messages = response.data
+    }, (err) => {
+      state.loading = false
+      console.log(err)
+      // state.loginerror = true
+    }
+  )
+}
+
+function kirimpesan(){
+  const data = {
+    sender_id: state.iduser,
+    receiver_id: state.iduser,
+    message: document.getElementById('inputmessage').value,
+  }
+  axios
+    .post(state.base + '/chats', data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.token,
+        }
+      }
+    )
+    .then((response) => {
+      // state.onCreateProduct = false
+      state.loading = false
+      console.log(response.data)
+      // getmessage()
+    }, (err) => {
+      state.loading = false
+      console.log(err)
+      // state.loginerror = true
+    }
+  )
+}
+
+function hubpenjual(){
+  state.page = 'chat'
+}
+
 </script>
 
 <template>
@@ -191,7 +480,7 @@ function addWarehouse(){
 
   <div class="row row-cols-2 row-cols-md-2 g-4" :style="{ 'display': state.authorizd ? (state.page === 'home' ? '' : 'none') : 'none'}">
   <div class="col" style="padding: 5px; margin-top: 0;" v-for="product in state.products" :key="product">
-    <div class="card btn btn-light" style="border-radius: 0.5em; padding: 0; border-color: white;">
+    <div @click="showProduct(product.id)" class="card btn btn-light" style="border-radius: 0.5em; padding: 0; border-color: white;">
       <img src="https://dummyimage.com/640x640/fff/aaa" class="card-img-top" alt="..." style="border-top-left-radius: 0.5em; border-top-right-radius: 0.5em;">
       <div class="card-body" style="padding: 10%; padding-bottom: 0; text-align: left;">
         <h6 class="card-title">{{ product.name }}</h6>
@@ -203,39 +492,106 @@ function addWarehouse(){
   <div style="height: 1vh;"></div>
 </div>
 
+<!-- SHOW PRODUCT-->
+<div :style="{ 'display': state.showprod && (state.page === 'home') ? '' : 'none'}" style="width: 100vw; background-color: white; position: absolute; z-index: 1; left: 0; top: 9vh;">
+  <button @click="backtohome()" type="button" class="btn btn-light" style="background-color: white;">
+    <i class="bi bi-chevron-left"></i>
+    Back
+  </button>
+  <button @click="hubpenjual()" type="button" class="btn btn-light float-end" style="background-color: white;">
+    Hubungi Supplier
+    <i class="bi bi-chevron-right"></i>
+  </button>
+  <img src="https://dummyimage.com/640x640/ebebeb/fff" class="card-img-top" alt="..." style="border-top-left-radius: 0.5em; border-top-right-radius: 0.5em;">
+  <h1 style="margin: 5%;">{{ state.product.name }}</h1>
+  <div style="display: flex; margin-left: 5vw;">
+  <h1 style="margin: 5%; margin-top: 2%;">Rp{{parseInt(state.product.price).toLocaleString() }}</h1>
+  <div style="width: 20vw;"></div>
+  <i @click="subquantity()" class="bi bi-dash-square-fill" style="font-size: 2em;"></i>
+  <h1 style="padding: 2%; margin-left: 1%; margin-right: 1%;">{{ state.count }}</h1>
+  <i @click="addquantity()" class="bi bi-plus-square-fill" style="font-size: 2em;"></i>
+  </div>
+  <div @click="checkout()" class="btn" :style=shadow style="margin: 5vw; margin-top:0;border-radius: 5em;width: 90vw;padding: 5%; bottom: 10vh;">Checkout</div>
+  <div style="margin :5%;width: 90vw;">{{ state.product.desc }} Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ultrices, turpis a feugiat maximus, nisl dui dictum mauris, eu mollis dui libero at felis. Aenean placerat nibh lacinia ligula tempus, vel vestibulum lorem scelerisque. In hendrerit metus et eros dictum venenatis. Donec vitae odio in velit consectetur commodo at eget dolor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Pellentesque mi ex, gravida vitae tempus in, tincidunt ac odio. Proin venenatis quam dolor, non dapibus urna mollis eget.</div>
+  <div style="height: 10vh;"></div>
+</div>
+
+<div :style="{ 'display': state.showprod && (state.page === 'home') && state.checkout ? '' : 'none'}" style="overflow: hidden;width: 100vw; background-color: white; position: absolute; z-index: 1; left: 0; top: 9vh; height: 200vh;">
+  <button @click="backtoprod()" type="button" class="btn btn-light" style="background-color: white;">
+    <i class="bi bi-chevron-left"></i>
+    Back
+  </button>
+
+  <div style="padding: 5%;text-align: right; width: 100vw;">
+    <div style="display: flex;">
+      <h5>Nama produk : </h5><h5 style="position: absolute; right: 5%;">{{ state.product.name }}</h5>
+    </div>
+    <div style="display: flex;">
+      <h5>Harga per item :</h5><h5 style="position: absolute; right: 5%;">Rp{{ parseInt(state.product.price).toLocaleString() }}</h5>
+    </div>
+    <div style="display: flex;">
+      <h5>Jumlah :</h5><h5 style="position: absolute; right: 5%;">{{ state.count }}</h5>
+    </div>
+    <div style="display: flex;">
+      <h5>Total :</h5><h5 style="position: absolute; right: 5%;">Rp{{ (state.count * parseInt(state.product.price)).toLocaleString() }}</h5>
+    </div>
+    <p style="margin-top: 5%;">* Pembayaran secara Cash On Delivery</p>
+  </div>
+  <form>
+  <div class="form-group row" style="padding: 5%;">
+    <label for="inputaddress" class="col-sm-2 col-form-label">Address</label>
+    <div class="col-sm-10">
+      <input type="address" class="form-control" id="inputaddress" placeholder="Address">
+    </div>
+  </div>
+</form>
+<button @click="buatorder()" type="button" class="btn btn-dark float-end" style="background-color: skyblue; border-color: skyblue; margin: 5%;">Buat pesanan</button>
+  <div style="height: 10vh;"></div>
+</div>
+
 <!-- ORDERS-->
-<div :style="{ 'display': state.page === 'order' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Belum ada pesanan</h1></div>
+<div :style="{ 'display': (state.page === 'order') ? '' : 'none'}">
+  <h1 :style="{ 'display': (state.orders) ? 'none' : ''}" style="text-align: center; color: white;">Belum ada pesanan</h1>
+  <h1 :style="{ 'display': (state.orders) ? '' : 'none'}" style="text-align: center; color: white;">Your Orders</h1>
+  <div style="height: 3vh;"></div>
+  <div class="d-grid gap-2">
+        <button v-for="order in state.orders" :key="order"  :style=shadow class="btn btn-light" type="button" style="margin-top: 2%;"> 
+          status: menunggu konfirmasi supplier
+          <h5>Jumlah : {{ order.quantity }}</h5>
+          <h5>Total : Rp{{ parseInt(order.total).toLocaleString() }}</h5>
+        </button>
+      </div>
+</div>
 
 <!-- ANALITICS-->
-<div :style="{ 'display': state.page === 'analitics' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Fitur ini belum tersedia</h1></div>
+<div :style="{ 'display': state.page === 'analitics' ? '' : 'none'}"><h1 style="text-align: center; color: gold; font-weight: 800;">VIP Members Only</h1></div>
 
-<!-- INVENTORI -->
-<div :style="{ 'display': state.page === 'inventory' ? (state.onCreateWarehouse ? 'none' : '') : 'none'}">
+<!-- WAREHOUSE & INVENTORI -->
+<div :style="{ 'display': state.page === 'inventory' ? (state.onCreateWarehouse || state.onCreateProduct ? 'none' : '') : 'none'}">
   <button type="button" class="btn btn-primary btn-sm float-end" :style=shadow @click="createWarehouse()" style="width: 40vw;border-color: #D27D2D;background-color: #D27D2D;border-radius: 50px;"><h5 style="padding: 0.01%;">+ warehouse</h5></button>
-  <button type="button" class="btn btn-primary btn-sm float-start" :style=shadow style="width: 40vw; border-color: indigo;background-color: indigo;border-radius: 50px;"><h5 style="padding: 0.01%;">+ produk mu   </h5></button>
+  <button type="button" class="btn btn-primary btn-sm float-start" :style=shadow @click="createProduct()" style="width: 40vw; border-color: indigo;background-color: indigo;border-radius: 50px;"><h5 style="padding: 0.01%;">+ products   </h5></button>
   
   <div style="text-align: center; padding-top: 20vh;">
     <i v-if="!state.warehouses" class="bi bi-box2" style="color: skyblue; font-size: 1500%;"></i>
 
-    <div><h1>Produk Jualan Mu</h1><hr></div>
+    <div><h3 style="font-weight: 800;">Distribusikan Produk Mu</h3><hr></div>
     <div class="scrolling-wrapper">
-      <div v-for="warehouse in state.warehouses" :key="warehouse" class="kartu card text-bg-light mb-3 btn btn-light" style="padding: 0;width: 8rem; text-align: left;">
-        <img src="https://placehold.jp/150x150.png" class="card-img-top">
+      <div v-for="p in state.products" :key="p" class="kartu card text-bg-light mb-3 btn btn-light" style="padding: 0;width: 8rem; text-align: left;">
+        <img src="https://dummyimage.com/150x150/fff/aaa" class="card-img-top">
         <div class="card-body" style="overflow: hidden;">
-          <h5 class="card-title">Light card title</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+          <h5 class="card-title">{{ p.name }}</h5>
+          <p class="card-text">Rp{{ parseInt(p.price).toLocaleString() }}</p>
         </div>
       </div>
     </div>
     <div style=" position: relative">
       <div style="height: 1vh;"></div>
-      <h1>Daftar Warehouse</h1>
+      <h3 style="font-weight: 800;">Daftar Warehouse</h3>
       <hr>
       <div class="d-grid gap-2">
-        <button :style=shadow class="btn btn-light" type="button">Button</button>
-        <button :style=shadow class="btn btn-light" type="button">Button</button>
-        <button :style=shadow class="btn btn-light" type="button">Button</button>
-        <button :style=shadow class="btn btn-light" type="button">Button</button>
+        <button v-for="warehouse in state.warehouses" :key="warehouse"  :style=shadow class="btn btn-light" type="button">{{ 
+            warehouse.location
+          }}</button>
       </div>
       <div style="height: 10vh;"></div>
     </div>
@@ -253,8 +609,38 @@ function addWarehouse(){
     <div style="height: 2vh;"></div>
   </div>
 </div>
+<!-- FORM CREATE PRODUCT-->
+<div class="card text-bg-light mx-auto" style="box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px; border-radius: 20px;" :style="{ 'display': state.onCreateProduct ? '': 'none'}">
+  <div class="card-header"><h1 style="margin: auto;">Add Product</h1></div>
+  <div class="card-body" style="padding-bottom: 0;">
+    <div class="mb-3">
+      <label for="productname" class="form-label"><h6>Nama barang</h6></label>
+      <input type="productname" class="form-control" id="productname">
+    </div>
+    <div class="mb-3">
+      <label for="productprice" class="form-label"><h6>Harga satuan</h6></label>
+      <input type="productprice" class="form-control" id="productprice">
+    </div>
+    <div class="mb-3">
+      <label for="productdesc" class="form-label"><h6>Deskripsi singkat</h6></label>
+      <input type="productdesc" class="form-control" id="productdesc">
+    </div>
+    <button type="submit" class="w-100 btn" style="border-radius: 20px; border-color: skyblue;" @click="addProduct()"><h5 style="margin: auto;">Add</h5></button>
+    <div style="height: 2vh;"></div>
+  </div>
+</div>
 <!-- CHAT -->
-<div :style="{ 'display': state.page === 'chat' ? '' : 'none'}"><h1 style="text-align: center; color: white;">Belum ada percakapan</h1></div>
+<div :style="{ 'display': state.page === 'chat' ? '' : 'none'}">
+  <h1 style="text-align: center; color: white;">Belum ada percakapan</h1>
+  <form class="form-inline" style="display: flex; position: fixed; left: 0; bottom: 7vh;">
+    <div class="form-group mx-sm-3 mb-2" style="width: 87vw;">
+      <input type="message" class="form-control" id="inputmessage" placeholder="Ketik Pesan">
+    </div>
+    <button @click="kirimpesan()" type="submit" class="btn btn-primary mb-2" style="color: white;">
+      <i class="bi bi-send-fill" style="color: white;"></i>
+    </button>
+</form>
+</div>
 
 <!-- PROFIL -->
 <div :style="{ 'display': state.authorizd ? (state.page === 'profile' ? '' : 'none') : 'none'}">
@@ -263,7 +649,7 @@ function addWarehouse(){
   <div style="width: 6vw; display: inline-block;"></div>
   <h1 style="display: inline-block; font-size: 4em; color: white;">{{ state.namauser }}</h1>
 </div>
-<h3 style="position: fixed; left: 0; top: 27vh;padding: 1.5em;">email : {{ state.emailuser }}</h3>
+<h3 style="position: fixed; left: 0; top: 20vh;padding: 1.5em; color: white">email:<div style="width: 5vw; display: inline-block;"></div> {{ state.emailuser }}</h3>
 <hr style="position: fixed; left: 0; top: 37vh;">
 </div>
 
