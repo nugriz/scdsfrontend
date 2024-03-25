@@ -82,7 +82,7 @@ function sign(){
   const email = document.getElementById("exampleInputEmail1").value
   const password = document.getElementById("exampleInputPassword1").value
   const username = document.getElementById("exampleInputUsername1").value
-  const url = state.onLogin ? state.base + '/users/auth' : state.base + '/users/'
+  const url = state.onLogin ? state.base + '/users/auth' : state.base + '/users'
   const data = {
     email: email,
     password: password,
