@@ -26,7 +26,7 @@ const state = reactive({
  pc: false,
  checkout: false,
  messages: [],
- base: 'https://scds-05aa2c4a8a4e.herokuapp.com/'
+ base: 'https://www.scds-05aa2c4a8a4e.herokuapp.com/'
 //  base: 'http://localhost:3000'
 })
 
